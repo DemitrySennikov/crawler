@@ -16,3 +16,5 @@ class Cache:
                 self.cache = pickle.load(f, encoding="utf-8")
         except FileNotFoundError:
             return
+        except EOFError:
+            return
