@@ -23,7 +23,7 @@ class HTML_parser(HTMLParser):
 
     def reset(self):
         super().reset()
-        self.links.clear()
+        self.links = []
 
     def handle_starttag(self, tag, attrs):
         if tag == "a":

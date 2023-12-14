@@ -15,4 +15,4 @@ class Cache:
             with open(self.path, 'rb') as f:
                 self.cache = pickle.load(f, encoding="utf-8")
         except FileNotFoundError:
-            pass
+            return
