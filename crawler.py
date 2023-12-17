@@ -10,6 +10,7 @@ import time
 import sys
 import urllib.robotparser as rob
 
+
 class Crawler:
     def __init__(self, url: str, filters: set, not_visited: Cache, 
                  visited: Cache, retry_max: int, follow_redirects: bool,
@@ -39,7 +40,12 @@ class Crawler:
                     self._visited.cache.add(current_link)
                     self._lock.release()
                     new_task = Thread(target=self._task, args=(current_link,))
-                    new_task.start()
+                    try:
+                        new_task.start()
+                    except KeyboardInterrupt:
+                        sys.exit(0)
+                    except Exception:
+                        pass
                     count += 1
                     if count % 100 == 0:
                         self._lock.acquire()
@@ -77,20 +83,29 @@ class Crawler:
                     if not self._robots.can_fetch(USER_AGENT, url):
                         continue
                     self._lock.acquire()
-                    self._not_visited.cache.add(parsed_link.geturl())
+                    self._not_visited.cache.add(parsed_link)
                     self._lock.release()
+            except KeyboardInterrupt:
+                sys.exit(0)
             except Exception:
-                return
+                continue
 
 
     def _save_html(self, url, text):
-        parts = url.replace(':', '_').replace('&',  '_').split('/')[2:]
-        path = pathlib.Path('/'.join(['Saved', *parts[:-1]]))
-        name_file = parts[-1].split('?')[0]
-        file_path = str(pathlib.Path(str(path) + name_file + '.html'))
-        if not os.path.isfile(file_path):
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(text)
+        try:
+            parts = url.split('/')
+            parts = list(filter(lambda x: x != '', parts[2:]))
+            parts[-1] = parts[-1].split('?')[0]
+            path = pathlib.Path('.'.join(parts))
+            file_path = str(pathlib.Path('Saved/' + str(path) + '.html'))
+            file_path = file_path.replace(':', '.').replace('&','.')
+            print(url)
+            print(file_path)
+            if not os.path.isfile(file_path):
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(text)
+        except KeyboardInterrupt:
+            sys.exit(0)
 
     
     def _robot_parser(self, url):

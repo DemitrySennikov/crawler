@@ -26,15 +26,14 @@ def main(args):
     visited = Cache('visited.pickle')
     not_visited.load(is_clear=args.clear)
     visited.load(is_clear=args.clear)
+    if not args.url:
+        return
     filters = set([lambda url: url not in args.filter_exclusion])
     if args.filter_only:
         filters.add(lambda url: url in args.filter_only)
     crawler = Crawler(args.url, filters, not_visited, visited, 
                       args.retry_count, args.follow_redirects, args.threads)
-    try:
-        crawler.work()
-    except KeyboardInterrupt:
-        sys.exit(0)
+    crawler.work()
 
 
 if __name__ == "__main__":
