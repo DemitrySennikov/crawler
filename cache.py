@@ -7,14 +7,15 @@ class Cache:
         self.cache = set()
 
     def save(self):
-        with open(self.path, 'wb+') as f:
+        with open(self.path, 'wb') as f:
             pickle.dump(self.cache, f)
 
-    def load(self):
+    def load(self, is_clear):
+        if is_clear:
+            self.cache = set()
+            self.save()
         try:
             with open(self.path, 'rb') as f:
                 self.cache = pickle.load(f, encoding="utf-8")
         except FileNotFoundError:
-            return
-        except EOFError:
-            return
+            self.load(is_clear=True)

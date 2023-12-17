@@ -3,7 +3,7 @@ from html.parser import HTMLParser
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.731 YaBrowser/23.11.1.731 Yowser/2.5 Safari/537.36"
 
-def download_url(url: str, retry_max = 0, follow_redirects = False):
+def download_url(url: str, retry_max: int, follow_redirects: bool):
     retries = 0
     while retries <= retry_max:
         try:
