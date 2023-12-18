@@ -21,7 +21,6 @@ arg_parse.add_argument('-c', '--clear', action='store_true',
 
 
 def main(args):
-    print(args.follow_redirects, args.clear)
     not_visited = Cache('not_visited.pickle')
     visited = Cache('visited.pickle')
     not_visited.load(is_clear=args.clear)

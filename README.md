@@ -1,5 +1,6 @@
 # **Crawler**
-Сенников Дмитрий, Плюснина Елена ФТ-203
+#### Сенников Дмитрий, Плюснина Елена ФТ-203
+---
 ### 1) **cache.py**
 Класс для создания кэша посещённых и непосещённых ссылок
 
@@ -23,3 +24,14 @@
     _update_links - должен обновлять непосещённые ссылки
 
     _save_html - сохраняет html
+
+    _robot_parser - обработка robots.txt
+
+
+### Запуск 
+
+    python main.py [-u https://wikipedia.org] [-rc 1] [-th 1000] [-fo https://ru.wikipedia ...] [-fe https://ru.wikipedia.org/wiki ...] [-r] [-c]
+
+Помощь в консоли
+
+    python main.py -h

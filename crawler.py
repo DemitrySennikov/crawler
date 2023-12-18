@@ -23,7 +23,6 @@ class Crawler:
         self._retry_max = retry_max
         self._follow_redirects = follow_redirects
         self._threads_limit = threads_limit
-        self._robots = self._robot_parser(url)
 
 
     def work(self):
@@ -70,6 +69,7 @@ class Crawler:
             
             
     def _update_links(self, url, links):
+        robots = self._robot_parser(url)
         for link in links:
             try:
                 parsed_link = urllib.parse.urlparse(link)
@@ -82,7 +82,7 @@ class Crawler:
                 if parsed_link not in self._visited.cache:
                     if any(not f(parsed_link) for f in self.filters):
                         continue
-                    if not self._robots.can_fetch(USER_AGENT, url):
+                    if not robots.can_fetch(USER_AGENT, url):
                         continue
                     self._lock.acquire()
                     self._not_visited.cache.add(parsed_link)
@@ -95,11 +95,16 @@ class Crawler:
 
     def _save_html(self, url, text):
         try:
+            url = urllib.parse.unquote(url)
             parts = url.split('/')
             parts = list(filter(lambda x: x != '', parts[2:]))
             parts[-1] = parts[-1].split('?')[0]
             path = pathlib.Path('.'.join(parts))
-            file_path = str(pathlib.Path('Saved/' + str(path) + '.html'))
+            path = (str(path).replace('/', '.').replace('\\', '.')
+                    .replace(':', '.').replace('>', '.').replace('<', '.')
+                    .replace('*', '.').replace('?', '.').replace('|', '.')
+                    .replace('\"', '.'))
+            file_path = str(pathlib.Path('Saved/' + path + '.html'))
             file_path = file_path.replace(':', '.').replace('&','.')
             print(url)
             print(file_path)
