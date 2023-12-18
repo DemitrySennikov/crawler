@@ -11,6 +11,9 @@ def download_url(url: str, retry_max: int, follow_redirects: bool):
                           follow_redirects=follow_redirects)
             if r.status_code == httpx.codes.OK:
                 return r.url, r.text
+            if r.status_code == httpx.codes.FOUND:
+                return None, None
+            retries += 1
         except Exception:
             retries += 1
     return None, None

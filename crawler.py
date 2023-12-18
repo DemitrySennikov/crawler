@@ -60,11 +60,11 @@ class Crawler:
         try:
             url, text = download_url(current_url, self._retry_max, 
                                     self._follow_redirects)
-            if text is not None and "<html" in text.lower():
+            if text is not None:
                 parser = HTML_parser()
                 parser.feed(text)
-                self._update_links(str(url), parser.links)
                 self._save_html(str(url), text)
+                self._update_links(str(url), parser.links)
         except KeyboardInterrupt:
             sys.exit(0)
             
@@ -77,6 +77,8 @@ class Crawler:
                     parsed_link = urllib.parse.urljoin(url, link)
                 else:
                     parsed_link = parsed_link.geturl()
+                if not parsed_link.startswith("http"):
+                    parsed_link = "https:" + parsed_link
                 if parsed_link not in self._visited.cache:
                     if any(not f(parsed_link) for f in self.filters):
                         continue
@@ -101,6 +103,7 @@ class Crawler:
             file_path = file_path.replace(':', '.').replace('&','.')
             print(url)
             print(file_path)
+            print()
             if not os.path.isfile(file_path):
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(text)
