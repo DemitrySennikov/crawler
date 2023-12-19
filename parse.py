@@ -1,4 +1,5 @@
 import httpx
+import sys
 from html.parser import HTMLParser
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.731 YaBrowser/23.11.1.731 Yowser/2.5 Safari/537.36"
@@ -11,9 +12,9 @@ def download_url(url: str, retry_max: int, follow_redirects: bool):
                           follow_redirects=follow_redirects)
             if r.status_code == httpx.codes.OK:
                 return r.url, r.text
-            if r.status_code == httpx.codes.FOUND:
-                return None, None
             retries += 1
+        except KeyboardInterrupt:
+            sys.exit(0)
         except Exception:
             retries += 1
     return None, None
