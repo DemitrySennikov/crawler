@@ -1,11 +1,10 @@
 from cache import Cache
 from parse import download_url, HTML_parser, USER_AGENT
+from file_work import save_html, add_links_to_graph
 
 from threading import Thread, Lock, active_count
 
 import urllib.parse
-import os.path
-import pathlib
 import time
 import sys
 import urllib.robotparser as rob
@@ -14,15 +13,15 @@ import urllib.robotparser as rob
 class Crawler:
     def __init__(self, url: str, filters: set, not_visited: Cache, 
                  visited: Cache, retry_max: int, follow_redirects: bool,
-                 threads_limit: int = 1000):
+                 threads_limit: int):
         self.url = url
         self.filters = filters
         self._not_visited = not_visited
         self._visited = visited
         self._lock = Lock()
-        self._retry_max = retry_max
-        self._follow_redirects = follow_redirects
-        self._threads_limit = threads_limit
+        self.retry_max = retry_max
+        self.follow_redirects = follow_redirects
+        self.threads_limit = threads_limit
 
 
     def work(self):
@@ -30,7 +29,7 @@ class Crawler:
             count = 0
             self._not_visited.cache.add(self.url)
             while len(self._not_visited.cache) > 0 or active_count() > 1:
-                if active_count() > self._threads_limit:
+                if active_count() > self.threads_limit:
                     time.sleep(0.01)
                     continue
                 if len(self._not_visited.cache) > 0:
@@ -38,7 +37,8 @@ class Crawler:
                     current_link = self._not_visited.cache.pop()
                     self._visited.cache.add(current_link)
                     self._lock.release()
-                    new_task = Thread(target=self._task, args=(current_link,))
+                    new_task = Thread(target=self._task, args=(current_link,),
+                                      daemon=True)
                     try:
                         new_task.start()
                     except KeyboardInterrupt:
@@ -57,13 +57,26 @@ class Crawler:
 
     def _task(self, current_url):
         try:
-            url, text = download_url(current_url, self._retry_max, 
-                                    self._follow_redirects)
+            url, text = download_url(current_url, self.retry_max, 
+                                     self.follow_redirects)
+            url = urllib.parse.unquote(str(url))
+            parsed_url = urllib.parse.urlparse(url)
             if text is not None:
                 parser = HTML_parser()
                 parser.feed(text)
-                self._save_html(str(url), text)
-                self._update_links(str(url), parser.links)
+                save_html(url, text)
+                links = parser.links
+                for i in range(len(links)):
+                    links[i] = urllib.parse.unquote(links[i])
+                    if not links[i].startswith('http'):
+                        if links[i].startswith('//'):
+                            links[i] = (parsed_url.scheme + ':' + links[i])
+                        else:
+                            links[i] = (parsed_url.scheme + '://' + 
+                                        parsed_url.netloc + '/' + links[i])
+                links = set(links)
+                add_links_to_graph(self._lock, url, links)
+                self._update_links(url, links)
         except KeyboardInterrupt:
             sys.exit(0)
             
@@ -77,8 +90,6 @@ class Crawler:
                     parsed_link = urllib.parse.urljoin(url, link)
                 else:
                     parsed_link = parsed_link.geturl()
-                if not parsed_link.startswith("http"):
-                    parsed_link = "https:" + parsed_link
                 if parsed_link not in self._visited.cache:
                     if any(not f(parsed_link) for f in self.filters):
                         continue
@@ -93,33 +104,13 @@ class Crawler:
                 continue
 
 
-    def _save_html(self, url, text):
-        try:
-            url = urllib.parse.unquote(url)
-            parts = url.split('/')
-            parts = list(filter(lambda x: x != '', parts[2:]))
-            parts[-1] = parts[-1].split('?')[0]
-            path = pathlib.Path('.'.join(parts))
-            path = (str(path).replace('/', '.').replace('\\', '.')
-                    .replace(':', '.').replace('>', '.').replace('<', '.')
-                    .replace('*', '.').replace('?', '.').replace('|', '.')
-                    .replace('\"', '.'))
-            file_path = str(pathlib.Path('Saved/' + path + '.html'))
-            file_path = file_path.replace(':', '.').replace('&','.')
-            print(url)
-            print(file_path)
-            print()
-            if not os.path.isfile(file_path):
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(text)
-        except KeyboardInterrupt:
-            sys.exit(0)
-
-    
     def _robot_parser(self, url):
         url_parse = urllib.parse.urlparse(url)
         rob_parser = rob.RobotFileParser()
         rob_parser.set_url(url_parse.scheme + "://" + 
                            url_parse.netloc + "/robots.txt")
-        rob_parser.read()
+        try:
+            rob_parser.read()
+        except Exception:
+            pass
         return rob_parser

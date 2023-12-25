@@ -30,7 +30,7 @@
 
 ### Запуск 
 
-    python main.py -u https://wikipedia.org -rc 1 -th 1000 -fo https://ru.wikipedia -fe https://ru.wikipedia.org/w/ -r -c
+    python main.py -u https://wikipedia.org -rc 10 -th 1000 -fo https://ru.wikipedia -fe https://ru.wikipedia.org/w/ -nr -c
 
 Помощь в консоли
 
