@@ -13,10 +13,10 @@ arg_parse.add_argument('-rc', '--retry_count', type=int, default=10,
                        help='Max retry attempts for request')
 arg_parse.add_argument('-th', '--threads', type=int, default=1000, 
                        help='Max count threads')
-arg_parse.add_argument('-fo', "--filter_only", type=str, default='', nargs='*',
+arg_parse.add_argument('-fo', "--filter_only", type=str, default='', 
                        help='Including filters')
 arg_parse.add_argument('-fe', "--filter_exclusion", type=str, default='', 
-                       nargs='*', help='Excluding filters')
+                       help='Excluding filters')
 arg_parse.add_argument('-nr', '--no_redirects', action='store_false',
                        help='Disallow redirects')
 arg_parse.add_argument('-c', '--clear', action='store_true', 
@@ -37,11 +37,13 @@ def main(args):
             json.dump(dict(), f)
     if not args.url:
         return
-    filters = set([lambda url: all(re.search(re.compile(f), url) is None
-                                   for f in args.filter_exclusion)])
+    filters = set()
+    if args.filter_exclusion:
+        filters.add(lambda url: (re.search(rf"{args.filter_exclusion}", url)
+                                 is None))
     if args.filter_only:
-        filters.add(lambda url: any(re.search(re.compile(f), url) is not None
-                                    for f in args.filter_only))
+        filters.add(lambda url: (re.search(rf"{args.filter_only}", url)
+                                 is not None))
     crawler = Crawler(args.url, filters, not_visited, visited, 
                       args.retry_count, args.no_redirects, args.threads)
     crawler.work()
