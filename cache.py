@@ -10,7 +10,7 @@ class Cache:
         with open(self.path, 'wb') as f:
             pickle.dump(self.cache, f)
 
-    def load(self, is_clear):
+    def load(self, is_clear=False):
         if is_clear:
             self.cache = set()
             self.save()

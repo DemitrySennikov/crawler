@@ -20,9 +20,7 @@ def save_html(url, text):
                 .replace('\"', '.'))
         file_path = str(pathlib.Path('Saved/' + path + '.html'))
         file_path = file_path.replace(':', '.').replace('&','.')
-        print(url)
-        print(file_path)
-        print()
+        print(url + '\n' + file_path + '\n')
         if not os.path.isfile(file_path):
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(text)

@@ -17,7 +17,9 @@ arg_parse.add_argument('-fo', "--filter_only", type=str, default='',
                        help='Including filters')
 arg_parse.add_argument('-fe', "--filter_exclusion", type=str, default='', 
                        help='Excluding filters')
-arg_parse.add_argument('-nr', '--no_redirects', action='store_false',
+arg_parse.add_argument('-H', '--HTML', action='store_true', 
+                       help='Download HTML')
+arg_parse.add_argument('-nr', '--no_redirects', action='store_true',
                        help='Disallow redirects')
 arg_parse.add_argument('-c', '--clear', action='store_true', 
                        help='Clear cash')
@@ -45,7 +47,8 @@ def main(args):
         filters.add(lambda url: (re.search(rf"{args.filter_only}", url)
                                  is not None))
     crawler = Crawler(args.url, filters, not_visited, visited, 
-                      args.retry_count, args.no_redirects, args.threads)
+                      not args.no_redirects, args.retry_count, args.threads,
+                      args.HTML)
     crawler.work()
 
 
